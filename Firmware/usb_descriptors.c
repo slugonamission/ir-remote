@@ -215,7 +215,7 @@ ROM BYTE configDescriptor1[]={
     0x00,                   // Country Code (0x00 for Not supported)
     HID_NUM_OF_DSC,         // Number of class descriptors, see usbcfg.h
     DSC_RPT,                // Report descriptor type
-    DESC_CONFIG_WORD(141),   //sizeof(hid_rpt01),      // Size of the report descriptor
+    DESC_CONFIG_WORD(174),   //sizeof(hid_rpt01),      // Size of the report descriptor
     
     /* Endpoint Descriptor */
     0x07,/*sizeof(USB_EP_DSC)*/
@@ -243,60 +243,6 @@ ROM struct{BYTE bLength;BYTE bDscType;WORD string[11];}sd002={
 sizeof(sd002),USB_DESCRIPTOR_STRING,
 {'I','R',' ','K','e','y','b','o','a','r','d'
 }};
-
-//Class specific descriptor - HID mouse
-/*ROM struct{BYTE report[HID_RPT01_SIZE];}hid_rpt01={
-    {    
-	0x05, 0x01,                    // USAGE_PAGE (Generic Desktop)
-    0x09, 0x06,                    // USAGE (Keyboard)
-    0x09, 0x01,
-    0xa1, 0x01,                    //   USAGE_PAGE (Keyboard)
-    0x19, 0xe0,                    //   USAGE_MINIMUM (Keyboard LeftControl)
-    0x29, 0xe7,                    //   USAGE_MAXIMUM (Keyboard Right GUI)
-	0x85, 0x01,
-    0x15, 0x00,                    //   LOGICAL_MINIMUM (0)
-    0x25, 0x01,                    //   LOGICAL_MAXIMUM (1)
-    0x75, 0x01,                    //   REPORT_SIZE (1)           // Modifier keys
-    0x95, 0x08,                    //   REPORT_COUNT (8)          // 8 of them
-    0x81, 0x02,                    //   INPUT (Data,Var,Abs)
-    0x95, 0x01,                    //   REPORT_COUNT (1)          // Reserved field
-    0x75, 0x08,                    //   REPORT_SIZE (8)
-    0x81, 0x03,                    //   INPUT (Cnst,Var,Abs)
-    0x95, 0x05,                    //   REPORT_COUNT (5)            // No idea
-    0x75, 0x01,                    //   REPORT_SIZE (1)
-    0x05, 0x08,                    //   USAGE_PAGE (LEDs)
-	0x19, 0x01,                    //   USAGE_MINIMUM (Num Lock)
-    0x29, 0x05,                    //   USAGE_MAXIMUM (Kana)
-    0x91, 0x02,                    //   OUTPUT (Data,Var,Abs)
-    0x95, 0x01,                    //   REPORT_COUNT (1)         // No idea
-    0x75, 0x03,                    //   REPORT_SIZE (3)
-    0x91, 0x03,                    //   OUTPUT (Cnst,Var,Abs)
-    0x95, 0x06,                    //   REPORT_COUNT (6)         // Up to 6 keypresses at once
-    0x75, 0x08,                    //   REPORT_SIZE (8)
-    0x15, 0x00,                    //   LOGICAL_MINIMUM (0)
-    0x25, 0x65,                    //   LOGICAL_MAXIMUM (101)
-    0x05, 0x07,                    //   USAGE_PAGE (Keyboard)
-    0x19, 0x00,                    //   USAGE_MINIMUM (Reserved (no event indicated))
-    0x29, 0x65,                    //   USAGE_MAXIMUM (Keyboard Application)
-    0x81, 0x00,                    //   INPUT (Data,Ary,Abs)
-    0x05, 0x0C,        // Usage Page Consumer Devices
-    0x15, 0x00,        // Logical Minimum, 0
-    0x25, 0x01,        // Logical Max 1
-	0x85, 0x02,
-	0x09, 0xB5,        // Next
-	0x09, 0xB6,        // Previous
-	0x09, 0xB7,        // Stop
-    0x09, 0xB8,        // Eject
-    0x09, 0xCD,        // Usage, Play/pause
-    0x09, 0xE2,        // Mute
-	0x09, 0xE5,        // Bass boost
-	0x09, 0x32,		   // Pause
-    0x95, 0x08,        // Report count, 8
-    0x75, 0x01,        // Report size 1
-    0x81, 0x02,        // Input variable
-
-    0xc0,      }
-};/* End Collection,End Collection            */
 
 ROM struct{BYTE report[HID_RPT01_SIZE];}hid_rpt01={
 {   0x05, 0x01,                    // USAGE_PAGE (Generic Desktop)
@@ -374,6 +320,22 @@ ROM struct{BYTE report[HID_RPT01_SIZE];}hid_rpt01={
 	0x75, 0x07,                    //    REPORT_COUNT(7)
 	0x81, 0x03,                    //    INPUT(Constant) (Padding)
 	0xC0,                          // END COLLECTION     27 bytes
+
+	0x06, 0x00, 0xFF,              // USAGE(Vendor Defined)
+    0x09, 0x01,                    // USAGE_PAGE(Vendor Defined)
+    0xA1, 0x01,                    // COLLECTION(Application)
+	0x85, 0x04,                    //    REPORT_ID(4)
+    0x19, 0x00,                    //    USAGE_MINIMUM(0)
+    0x2A, 0xFF, 0x00,              //    USAGE_MAXIMUM(255)
+	0x15, 0x00,                    //    LOGICAL_MINIMUM(0)
+    0x26, 0xFF, 0x00,              //    LOGICAL_MAXIMUM(255)
+    0x75, 0x08,                    //    REPORT_SIZE(8)
+    0x95, 0x08,                    //    REPORT_COUNT(8)
+    0x81, 0x00,                    //    INPUT(Var, Arr, Abs)
+    0x19, 0x00,                    //    USAGE_MINIMUM(0)
+    0x2A, 0xFF, 0x00,              //    USAGE_MAXIMUM(255)
+	0x91, 0x00,                    //    OUTPUT(Var, Arr, Abs)
+	0xC0,                          // END_COLLECTION          33 bytes
 	
    }
 };

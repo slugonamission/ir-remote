@@ -51,6 +51,8 @@
 #include "./USB/usb_device.h"
 #include "./USB/usb.h"
 
+#include "IR.h"
+
 #include "HardwareProfile.h"
 
 #include "./USB/usb_function_hid.h"
@@ -160,20 +162,6 @@ USB_HANDLE lastTransmission;
 BOOL Keyboard_out;
 
 
-// My variables
-#define KEY_QUEUE_SIZE 50
-unsigned char keyboard_queue[KEY_QUEUE_SIZE];
-int keyboard_queue_loc = 0;
-int keyboard_queue_ptr = 0;
-
-unsigned char keyboard2_queue[KEY_QUEUE_SIZE];
-int keyboard2_queue_loc = 0;
-int keyboard2_queue_ptr = 0;
-
-unsigned char keyboard3_queue[KEY_QUEUE_SIZE];
-int keyboard3_queue_loc = 0;
-int keyboard3_queue_ptr = 0;
-
 
 /** PRIVATE PROTOTYPES *********************************************/
 void BlinkUSBStatus(void);
@@ -185,15 +173,7 @@ void UserInit(void);
 void YourHighPriorityISRCode();
 void YourLowPriorityISRCode();
 void Keyboard(void);
-void AddToQueue(unsigned char scancode, char which);
-void IRHandler(void);
-void HandleIR(char cmd);
-void RB0Falling(void);
-void RB0Rising(void);
-void TMR0StartReset(void);
-void TMR0Stop(void);
-void TMR2StartReset(void);
-void TMR2Stop(void);
+
 
 
 /** VECTOR REMAPPING ***********************************************/
@@ -292,7 +272,7 @@ void TMR2Stop(void);
 		// If the timer has ticked.
 		if(INTCON & 0x02)
 		{
-			IRHandler();
+			IRIntr_Sony();
 			INTCON &= 0xFD; // Clear the INT0 flag.
 		}
 
@@ -536,39 +516,7 @@ void UserInit(void)
 	PIE1 = 0x02; // Enable match interrupt
 }//end UserInit
 
-void RB0Falling(void)
-{
-	INTCON2 &= 0b10111111;
-}
 
-void RB0Rising(void)
-{
-	INTCON2 |= 0b01000000;
-}
-
-void TMR0StartReset(void)
-{
-	TMR0H = 0;
-	TMR0L = 0;
-	T0CON |= 0x80; // Enable it
-}
-
-void TMR0Stop(void)
-{
-	T0CON &= 0x7F; // Disable it
-}
-
-void TMR2StartReset(void)
-{
-	TMR2 = 0;
-	T2CON |= 0x04; // Start the timer
-}
-
-void TMR2Stop(void)
-{
-	TMR2 = 0; // Just incase
-	T2CON &= 0xFB; // Disable timer
-}
 
 /********************************************************************
  * Function:        void ProcessIO(void)
@@ -605,13 +553,13 @@ void Keyboard(void)
 
     if(!HIDTxHandleBusy(lastTransmission))
     {
-       	if(keyboard_queue_loc != keyboard_queue_ptr)
+       	if(IsCmdReady())
         {
         	//Load the HID buffer
 			hid_report_in[0] = 1;
         	hid_report_in[1] = 0;
         	hid_report_in[2] = 0;
-        	hid_report_in[3] = keyboard_queue[keyboard_queue_loc];
+        	hid_report_in[3] = NextCmd();
         	hid_report_in[4] = 0;
         	hid_report_in[5] = 0;
         	hid_report_in[6] = 0;
@@ -620,17 +568,14 @@ void Keyboard(void)
            	//Send the 8 byte packet over USB to the host.
            	lastTransmission = HIDTxPacket(HID_EP, (BYTE*)hid_report_in, 9);
 
-			keyboard_queue_loc += 1;
-			if(keyboard_queue_loc >= KEY_QUEUE_SIZE)
-				keyboard_queue_loc = 0;
 			sentLast = 1;
 			
         }
-		else if(keyboard2_queue_loc != keyboard2_queue_ptr)
+		else if(IsCmd2Ready())
 		{
 			//Load the HID buffer
 			hid_report_in[0] = 2;
-        	hid_report_in[1] = keyboard2_queue[keyboard2_queue_loc];
+        	hid_report_in[1] = NextCmd2();
         	hid_report_in[2] = 0;
         	hid_report_in[3] = 0;
         	hid_report_in[4] = 0;
@@ -641,16 +586,13 @@ void Keyboard(void)
            	//Send the 8 byte packet over USB to the host.
            	lastTransmission = HIDTxPacket(HID_EP, (BYTE*)hid_report_in, 9);
 
-			keyboard2_queue_loc += 1;
-			if(keyboard2_queue_loc >= KEY_QUEUE_SIZE)
-				keyboard2_queue_loc = 0;
 			sentLast = 2;
 		}
-		else if(keyboard3_queue_loc != keyboard3_queue_ptr)
+		else if(IsCmd3Ready())
 		{
 			//Load the HID buffer
 			hid_report_in[0] = 3;
-        	hid_report_in[1] = keyboard3_queue[keyboard3_queue_loc];
+        	hid_report_in[1] = NextCmd3();
         	hid_report_in[2] = 0;
         	hid_report_in[3] = 0;
         	hid_report_in[4] = 0;
@@ -661,9 +603,6 @@ void Keyboard(void)
            	//Send the 8 byte packet over USB to the host.
            	lastTransmission = HIDTxPacket(HID_EP, (BYTE*)hid_report_in, 9);
 
-			keyboard3_queue_loc += 1;
-			if(keyboard3_queue_loc >= KEY_QUEUE_SIZE)
-				keyboard3_queue_loc = 0;
 			sentLast = 3;
 		}
         else
@@ -701,134 +640,6 @@ void Keyboard(void)
     }
     return;		
 }//end keyboard()
-
-
-void AddToQueue(unsigned char scancode, char which)
-{
-	if(which == 0)
-	{
-		keyboard_queue[keyboard_queue_ptr] = scancode;
-		keyboard_queue_ptr++;
-		if(keyboard_queue_ptr >= KEY_QUEUE_SIZE)
-			keyboard_queue_ptr = 0;
-	}
-	else if(which == 1)
-	{
-		keyboard2_queue[keyboard2_queue_ptr] = scancode;
-		keyboard2_queue_ptr++;
-		if(keyboard2_queue_ptr >= KEY_QUEUE_SIZE)
-			keyboard2_queue_ptr = 0;
-	}
-	else
-	{
-		keyboard3_queue[keyboard3_queue_ptr] = scancode;
-		keyboard3_queue_ptr++;
-		if(keyboard3_queue_ptr >= KEY_QUEUE_SIZE)
-			keyboard3_queue_ptr = 0;
-	}
-}
-
-void IRHandler(void)
-{
-	static char state = 0;
-	static char buf = 0;	
-	static char bits = 0;
-	static int porchIgnore = 0;
-	char tmrC = 0;
-
-	// Read the pin
-	char IR = PORTBbits.RB0;
-
-	switch(state)
-	{
-	case 0: // Signal has gone low
-		RB0Rising();  // Reverse the polarity of the interrupt
-		state = 1;
-		TMR0StartReset();
-		break;
-	case 1: // Signal went back high
-		RB0Falling(); // Reverse it again
-		TMR0Stop();
-		tmrC = TMR0L; // Get the timer value out
-
-		if(porchIgnore > 0)
-			porchIgnore--;
-
-		if(tmrC < 80 || porchIgnore != 0) // We probably missed the opening porch
-			state = 0;
-		else
-		{
-			state = 2;
-		}
-		break;
-
-	case 2:
-		// We're in the signal now.
-		// It went low, start the timer
-		TMR0StartReset();
-		RB0Rising();
-		state = 3;
-		break;
-	case 3:
-		// Got a bit
-		TMR0Stop();
-		tmrC = TMR0L;
-		if(tmrC > 50) // Was probably a 1
-			buf = buf * 2 + 1;
-		else          // Was probably a 0
-			buf *= 2;
-		
-		bits++;
-		RB0Falling();
-		if(bits == 6)
-		{
-			// Done!
-			HandleIR(buf);
-			porchIgnore = 8;
-			buf = 0;
-			bits = 0;
-			state = 0;
-		}
-		else
-		{
-			// Go read another bit.
-			state = 2;
-		}
-	}
-}
-
-void HandleIR(char cmd)
-{
-	switch(cmd)
-	{
-		case 0x32:  // Vol down - 0b00110010
-			//AddToQueue(0x81, 0);
-			break;
-		case 0x12:  // Vol up - 0b00010010
-			//AddToQueue(0x80, 0);
-			break; 
-		case 0x13:    // Play - 0b010011
-			AddToQueue(0x10, 1);
-			break;
-		case 0x27:    // Pause - 0b100111
-			AddToQueue(0x40, 1);
-			break;
-		case 0x07:    // Stop - 0b00000111
-			AddToQueue(0x04, 1);
-			break;  
-		case 0x2A:    // Power - 0b00101010
-			AddToQueue(0x81, 2);
-			break; 
-		case 0x03:            // Prev - 0b00000011      
-			AddToQueue(0x02, 1);
-			break;
-		case 0x23:          // Next - 0b00100011
-			AddToQueue(0x01, 1);
-			break;	
-	}
-	
-}
-
 
 
 /******************************************************************************

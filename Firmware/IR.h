@@ -17,8 +17,10 @@ short IsCmd3Ready(void);
 
 // Get the command for the specified queue. Returns 0 if no
 // command is available.
-char NextCmd(void);
-char NextCmd2(void);
-char NextCmd3(void);
+unsigned char NextCmd(void);
+unsigned char NextCmd2(void);
+unsigned char NextCmd3(void);
+
+unsigned char GetLastCmd(unsigned char* cmd);
 
 #endif

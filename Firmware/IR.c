@@ -4,6 +4,8 @@
 #include "Compiler.h"
 #include "HardwareProfile.h"
 
+#define SONY_NUM_BITS 7
+
 // Internal variables
 unsigned char keyboard_queue[KEY_QUEUE_SIZE];
 int keyboard_queue_loc = 0;
@@ -16,6 +18,9 @@ int keyboard2_queue_ptr = 0;
 unsigned char keyboard3_queue[KEY_QUEUE_SIZE];
 int keyboard3_queue_loc = 0;
 int keyboard3_queue_ptr = 0;
+
+unsigned char lastCmd = 0;
+short cmdRead = 1;
 
 // Add scancode to the queue for report (which+1)
 void AddToQueue(unsigned char scancode, char which);
@@ -74,7 +79,7 @@ void IRIntr_Sony(void)
 		
 		bits++;
 		RB0Falling();
-		if(bits == 6)
+		if(bits == SONY_NUM_BITS)
 		{
 			// Done!
 			HandleIR(buf);
@@ -101,25 +106,28 @@ void HandleIR(char cmd)
 		case 0x12:  // Vol up - 0b00010010
 			//AddToQueue(0x80, 0);
 			break; 
-		case 0x13:    // Play - 0b010011
+		case 0x26:    // Play - 0b010011
 			AddToQueue(0x10, 1);
 			break;
-		case 0x27:    // Pause - 0b100111
+		case 0x4E:    // Pause - 0b100111
 			AddToQueue(0x40, 1);
 			break;
-		case 0x07:    // Stop - 0b00000111
+		case 0x0E:    // Stop - 0b00000111
 			AddToQueue(0x04, 1);
 			break;  
-		case 0x2A:    // Power - 0b00101010
+		case 0x54:    // Power - 0b00101010
 			AddToQueue(0x81, 2);
 			break; 
-		case 0x03:            // Prev - 0b00000011      
+		case 0x06:            // Prev - 0b00000011      
 			AddToQueue(0x02, 1);
 			break;
-		case 0x23:          // Next - 0b00100011
+		case 0x46:          // Next - 0b00100011
 			AddToQueue(0x01, 1);
 			break;	
 	}
+
+	lastCmd = cmd;
+	cmdRead = 0;
 	
 }
 
@@ -139,7 +147,7 @@ short IsCmd3Ready(void)
 }
 
 
-char NextCmd(void)
+unsigned char NextCmd(void)
 {
 	char rv;
 
@@ -154,7 +162,7 @@ char NextCmd(void)
 	return rv;
 }
 
-char NextCmd2(void)
+unsigned char NextCmd2(void)
 {
 	char rv;
 
@@ -169,7 +177,7 @@ char NextCmd2(void)
 	return rv;
 }
 
-char NextCmd3(void)
+unsigned char NextCmd3(void)
 {
 	char rv;
 
@@ -206,6 +214,20 @@ void AddToQueue(unsigned char scancode, char which)
 		keyboard3_queue_ptr++;
 		if(keyboard3_queue_ptr >= KEY_QUEUE_SIZE)
 			keyboard3_queue_ptr = 0;
+	}
+}
+
+unsigned char GetLastCmd(unsigned char* cmd)
+{
+	if(cmdRead)
+	{
+		return 0;
+	}
+	else
+	{
+		cmdRead = 1;
+		*cmd = lastCmd;
+		return 1;
 	}
 }
 

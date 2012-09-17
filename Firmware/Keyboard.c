@@ -159,6 +159,7 @@
 BYTE old_sw2,old_sw3;
 char buffer[8];
 USB_HANDLE lastTransmission;
+USB_HANDLE lastOutTransmission;
 BOOL Keyboard_out;
 
 
@@ -268,7 +269,7 @@ void Keyboard(void);
 
 		// OMGOMGOMGOMGOMGOMGOMGOMG
 		// WHICH INTERRUPT DO WE NEED TO SERVICE?!
-
+		//USBDeviceTasks();
 		// If the timer has ticked.
 		if(INTCON & 0x02)
 		{
@@ -496,6 +497,7 @@ void UserInit(void)
     // transmission
 
     lastTransmission = 0;
+	lastOutTransmission = 0;
 
 	// Set up the poll timer.
 	T0CON = 0b01000111;  // Timer off. 8 bit. Inst clock. L->H. Prescale 256.
@@ -550,10 +552,28 @@ void ProcessIO(void)
 void Keyboard(void)
 {
 	static int sentLast = 0;
+	static int reply = 0;
+	unsigned char lastCmd = 0;
 
     if(!HIDTxHandleBusy(lastTransmission))
     {
-       	if(IsCmdReady())
+		if(reply == 1 && GetLastCmd(&lastCmd))
+		{
+			//Load the HID buffer
+			hid_report_in[0] = 4;
+        	hid_report_in[1] = lastCmd;
+        	hid_report_in[2] = 0;
+        	hid_report_in[3] = 0;
+        	hid_report_in[4] = 0;
+        	hid_report_in[5] = 0;
+        	hid_report_in[6] = 0;
+        	hid_report_in[7] = 0;
+        	hid_report_in[8] = 0;
+           	//Send the 8 byte packet over USB to the host.
+           	lastTransmission = HIDTxPacket(HID_EP, (BYTE*)hid_report_in, 9);
+			reply = 0;
+		}
+       	else if(IsCmdReady())
         {
         	//Load the HID buffer
 			hid_report_in[0] = 1;
@@ -638,6 +658,17 @@ void Keyboard(void)
 			}
         }
     }
+
+	if(!HIDRxHandleBusy(lastOutTransmission))
+	{
+		if(hid_report_out[0] == 4) // Have we got the right report?
+		{
+			reply = 1;
+		}
+
+		lastOutTransmission = HIDRxPacket(HID_EP, (BYTE*)&hid_report_out, 9);
+	}
+
     return;		
 }//end keyboard()
 
@@ -1062,7 +1093,7 @@ void USBCBStdSetDscHandler(void)
 void USBCBInitEP(void)
 {
     //enable the HID endpoint
-    USBEnableEndpoint(HID_EP,USB_IN_ENABLED|USB_HANDSHAKE_ENABLED|USB_DISALLOW_SETUP);
+    USBEnableEndpoint(HID_EP,USB_IN_ENABLED|USB_HANDSHAKE_ENABLED|USB_DISALLOW_SETUP|USB_OUT_ENABLED);
 }
 
 /********************************************************************

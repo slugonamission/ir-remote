@@ -50,7 +50,7 @@
 #define USBCFG_H
 
 /** DEFINITIONS ****************************************************/
-#define USB_EP0_BUFF_SIZE		8	// Valid Options: 8, 16, 32, or 64 bytes.
+#define USB_EP0_BUFF_SIZE		16	// Valid Options: 8, 16, 32, or 64 bytes.
 								// Using larger options take more SRAM, but
 								// does not provide much advantage in most types
 								// of applications.  Exceptions to this, are applications
@@ -58,7 +58,7 @@
 								// application related data.
 									
 #define USB_MAX_NUM_INT     	1   // For tracking Alternate Setting
-#define USB_MAX_EP_NUMBER	    1
+#define USB_MAX_EP_NUMBER	    2
 
 //Device descriptor - if these two definitions are not defined then
 //  a ROM USB_DEVICE_DESCRIPTOR variable by the exact name of device_dsc
@@ -73,7 +73,7 @@
 
 //Make sure only one of the below "#define USB_PING_PONG_MODE"
 //is uncommented.
-#define USB_PING_PONG_MODE USB_PING_PONG__NO_PING_PONG
+#define USB_PING_PONG_MODE USB_PING_PONG__FULL_PING_PONG
 //#define USB_PING_PONG_MODE USB_PING_PONG__FULL_PING_PONG
 //#define USB_PING_PONG_MODE USB_PING_PONG__EP0_OUT_ONLY
 //#define USB_PING_PONG_MODE USB_PING_PONG__ALL_BUT_EP0		//NOTE: This mode is not supported in PIC18F4550 family rev A3 devices
@@ -104,8 +104,8 @@
 /* HID */
 #define HID_INTF_ID             0x00
 #define HID_EP 					1
-#define HID_INT_OUT_EP_SIZE     3
-#define HID_INT_IN_EP_SIZE      12
+#define HID_INT_OUT_EP_SIZE     9
+#define HID_INT_IN_EP_SIZE      9
 #define HID_NUM_OF_DSC          1
 #define HID_RPT01_SIZE          174
 #define HID_RPT02_SIZE          24

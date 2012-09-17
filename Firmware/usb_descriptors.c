@@ -190,7 +190,7 @@ ROM BYTE configDescriptor1[]={
     /* Configuration Descriptor */
     0x09,//sizeof(USB_CFG_DSC),    // Size of this descriptor in bytes
     USB_DESCRIPTOR_CONFIGURATION,                // CONFIGURATION descriptor type
-    DESC_CONFIG_WORD(0x0022),   // Total length of data for this cfg
+    DESC_CONFIG_WORD(0x0029),   // Total length of data for this cfg
     1,                      // Number of interfaces in this cfg
     1,                      // Index value of this configuration
     0,                      // Configuration string index
@@ -202,9 +202,9 @@ ROM BYTE configDescriptor1[]={
     USB_DESCRIPTOR_INTERFACE,               // INTERFACE descriptor type
     0,                      // Interface Number
     0,                      // Alternate Setting Number
-    1,                      // Number of endpoints in this intf
+    2,                      // Number of endpoints in this intf
     HID_INTF,               // Class code
-    BOOT_INTF_SUBCLASS,     // Subclass code
+    0,     // Subclass code
     HID_PROTOCOL_KEYBOARD,     // Protocol code
     0,                      // Interface string index
 
@@ -222,7 +222,14 @@ ROM BYTE configDescriptor1[]={
     USB_DESCRIPTOR_ENDPOINT,    //Endpoint Descriptor
     HID_EP | _EP_IN,            //EndpointAddress
     _INT,                       //Attributes
-    DESC_CONFIG_WORD(8),        //size
+    DESC_CONFIG_WORD(9),        //size
+    0x01,                       //Interval
+
+	0x07,/*sizeof(USB_EP_DSC)*/
+    USB_DESCRIPTOR_ENDPOINT,    //Endpoint Descriptor
+    HID_EP | _EP_OUT,            //EndpointAddress
+    _INT,                       //Attributes
+    DESC_CONFIG_WORD(9),        //size
     0x01                        //Interval
 };
 
@@ -278,8 +285,8 @@ ROM struct{BYTE report[HID_RPT01_SIZE];}hid_rpt01={
     0x29, 0x65,                    //   USAGE_MAXIMUM (Keyboard Application)
     0x81, 0x00,                    //   INPUT (Data,Ary,Abs)
     0xc0,                          // End Collection
-    0x05, 0x0C,                    // USAGE(Consumer)
-    0x09, 0x01,                    // USAGE_PAGE(Consumer)
+    0x05, 0x0C,                    // USAGE_PAGE(Consumer)
+    0x09, 0x01,                    // USAGE(Consumer)
     0xA1, 0x01,                    // COLLECTION(Application)
     0x15, 0x00,                    //    LOGICAL_MIN(0)
     0x25, 0x01,                    //    LOGICAL_MAX(1)
@@ -306,8 +313,8 @@ ROM struct{BYTE report[HID_RPT01_SIZE];}hid_rpt01={
     0x81, 0x02,                    //    INPUT(Var)
     0xC0,                          //  END COLLECTION    120-1-1-2-2
 
-	0x05, 0x01,                    // USAGE(Generic Desktop)
-	0x09, 0x80,                    // USAGE_PAGE(System Control)
+	0x05, 0x01,                    // USAGE_PAGE(Generic Desktop)
+	0x09, 0x80,                    // USAGE(System Control)
 	0xA1, 0x01,                    // COLLECTION(Application)
 	0x15, 0x00,                    //    LOGICAL_MIN(0)
     0x25, 0x01,                    //    LOGICAL_MAX(1)
@@ -321,8 +328,8 @@ ROM struct{BYTE report[HID_RPT01_SIZE];}hid_rpt01={
 	0x81, 0x03,                    //    INPUT(Constant) (Padding)
 	0xC0,                          // END COLLECTION     27 bytes
 
-	0x06, 0x00, 0xFF,              // USAGE(Vendor Defined)
-    0x09, 0x01,                    // USAGE_PAGE(Vendor Defined)
+	0x06, 0x00, 0xFF,              // USAGE_PAGE(Vendor Defined)
+    0x09, 0x01,                    // USAGE(Vendor Defined)
     0xA1, 0x01,                    // COLLECTION(Application)
 	0x85, 0x04,                    //    REPORT_ID(4)
     0x19, 0x00,                    //    USAGE_MINIMUM(0)

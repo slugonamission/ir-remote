@@ -107,22 +107,22 @@ void HandleIR(char cmd)
 			//AddToQueue(0x80, 0);
 			break; 
 		case 0x26:    // Play - 0b010011
-			AddToQueue(0x10, 1);
+			AddToQueue(0xB0, 1);
 			break;
 		case 0x4E:    // Pause - 0b100111
-			AddToQueue(0x40, 1);
+			AddToQueue(0xB1, 1);
 			break;
 		case 0x0E:    // Stop - 0b00000111
-			AddToQueue(0x04, 1);
+			AddToQueue(0xB7, 1);
 			break;  
 		case 0x54:    // Power - 0b00101010
-			AddToQueue(0x81, 2);
+			AddToQueue(0x82, 2);
 			break; 
 		case 0x06:            // Prev - 0b00000011      
-			AddToQueue(0x02, 1);
+			AddToQueue(0xB6, 1);
 			break;
 		case 0x46:          // Next - 0b00100011
-			AddToQueue(0x01, 1);
+			AddToQueue(0xB5, 1);
 			break;	
 	}
 

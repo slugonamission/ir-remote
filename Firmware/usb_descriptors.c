@@ -215,7 +215,7 @@ ROM BYTE configDescriptor1[]={
     0x00,                   // Country Code (0x00 for Not supported)
     HID_NUM_OF_DSC,         // Number of class descriptors, see usbcfg.h
     DSC_RPT,                // Report descriptor type
-    DESC_CONFIG_WORD(174),   //sizeof(hid_rpt01),      // Size of the report descriptor
+    DESC_CONFIG_WORD(HID_RPT01_SIZE),   //sizeof(hid_rpt01),      // Size of the report descriptor
     
     /* Endpoint Descriptor */
     0x07,/*sizeof(USB_EP_DSC)*/
@@ -285,48 +285,35 @@ ROM struct{BYTE report[HID_RPT01_SIZE];}hid_rpt01={
     0x29, 0x65,                    //   USAGE_MAXIMUM (Keyboard Application)
     0x81, 0x00,                    //   INPUT (Data,Ary,Abs)
     0xc0,                          // End Collection
+
     0x05, 0x0C,                    // USAGE_PAGE(Consumer)
     0x09, 0x01,                    // USAGE(Consumer)
     0xA1, 0x01,                    // COLLECTION(Application)
-    0x15, 0x00,                    //    LOGICAL_MIN(0)
-    0x25, 0x01,                    //    LOGICAL_MAX(1)
+    0x16, 0x00, 0x00,              //    LOGICAL_MIN(Play)
+    0x26, 0xEA, 0x00,              //    LOGICAL_MAX(1)
     0x85, 0x02,                    //    REPORT_ID(2)
 
-    0x95, 0x01,                    //    REPORT_SIZE(1)
-    0x75, 0x01,                    //    REPORT_COUNT(1)
-
-    0x09, 0xB5,                    //    USAGE(Next)
-    0x81, 0x02,                    //    INPUT(Var)
-    0x09, 0xB6,                    //    USAGE(Prev)
-    0x81, 0x02,                    //    INPUT(Var)
-    0x09, 0xB7,                    //    USAGE(Stop)
-    0x81, 0x02,                    //    INPUT(Var)
-    0x09, 0xB8,                    //    USAGE(Eject)
-    0x81, 0x02,                    //    INPUT(Var)
-    0x09, 0xB0,                    //    USAGE(Play)
-    0x81, 0x02,                    //    INPUT(Var)
-    0x09, 0xE2,                    //    USAGE(Mute)
-    0x81, 0x02,                    //    INPUT(Var)
-    0x09, 0xB1,                    //    USAGE(Pause)
-    0x81, 0x02,                    //    INPUT(Var)
-    0x09, 0x30,                    //    USAGE(Power)  -- POWER!
-    0x81, 0x02,                    //    INPUT(Var)
-    0xC0,                          //  END COLLECTION    120-1-1-2-2
+	0x1A, 0x00, 0x00,                   //    USAGE_MINIMUM(Play)
+	0x2A, 0xEA, 0x00,                   //    USAGE_MAXIMUM(Volume Decrement)
+    0x95, 0x01,                    //    REPORT_COUNT(8)
+    0x75, 0x08,                    //    REPORT_SIZE(8)
+    0x81, 0x00,                    //    INPUT(Data, Ary, Abs)
+	
+    0xC0,                          //  END COLLECTION    
 
 	0x05, 0x01,                    // USAGE_PAGE(Generic Desktop)
 	0x09, 0x80,                    // USAGE(System Control)
 	0xA1, 0x01,                    // COLLECTION(Application)
-	0x15, 0x00,                    //    LOGICAL_MIN(0)
-    0x25, 0x01,                    //    LOGICAL_MAX(1)
+	0x16, 0x00, 0x00,              //    LOGICAL_MIN(0)
+    0x26, 0x93, 0x00,              //    LOGICAL_MAX(1)
     0x85, 0x03,                    //    REPORT_ID(3)
-	0x95, 0x01,                    //    REPORT_SIZE(1)
-	0x75, 0x01,                    //    REPORT_COUNT(1)
-	0x09, 0x82,                    //    USAGE(System Sleep)
-	0x81, 0x02,                    //    INPUT(Var)
-	0x95, 0x01,                    //    REPORT_SIZE(1)
-	0x75, 0x07,                    //    REPORT_COUNT(7)
-	0x81, 0x03,                    //    INPUT(Constant) (Padding)
-	0xC0,                          // END COLLECTION     27 bytes
+	0x1A, 0x00, 0x00,                  //    USAGE_MINIMUM(System Power Down)
+	0x2A, 0x93, 0x00,                  //    USAGE_MAXIMUM(D-pad Left)
+
+	0x95, 0x01,                    //    REPORT_COUNT(8)
+	0x75, 0x08,                    //    REPORT_SIZE(8)
+	0x81, 0x00,                    //    INPUT(Data, Ary, Abs)
+	0xC0,                          // END COLLECTION     
 
 	0x06, 0x00, 0xFF,              // USAGE_PAGE(Vendor Defined)
     0x09, 0x01,                    // USAGE(Vendor Defined)
@@ -342,7 +329,7 @@ ROM struct{BYTE report[HID_RPT01_SIZE];}hid_rpt01={
     0x19, 0x00,                    //    USAGE_MINIMUM(0)
     0x2A, 0xFF, 0x00,              //    USAGE_MAXIMUM(255)
 	0x91, 0x00,                    //    OUTPUT(Var, Arr, Abs)
-	0xC0,                          // END_COLLECTION          33 bytes
+	0xC0,                          // END_COLLECTION          
 	
    }
 };

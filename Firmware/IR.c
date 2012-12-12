@@ -1,8 +1,25 @@
 #include "IR.h"
+#include "EEPROM.h"
 #include "Timer.h"
 #include "GenericTypeDefs.h"
 #include "Compiler.h"
 #include "HardwareProfile.h"
+#include <stdlib.h>
+
+typedef struct _usbTable
+{
+	UINT8 report;
+	UINT8 ir_cmd;
+	UINT8 usb_cmd;
+	struct _usbTable* next;
+} USBTable;
+
+UINT8 num_entries;
+UINT8 max_entries = EEPROM_MAX / 4;   // Divide by 4, just to be safe...
+
+USBTable* table;
+
+int porchIgnore = 0;
 
 #define SONY_NUM_BITS 7
 
@@ -19,6 +36,10 @@ unsigned char keyboard3_queue[KEY_QUEUE_SIZE];
 int keyboard3_queue_loc = 0;
 int keyboard3_queue_ptr = 0;
 
+unsigned char mouse_queue[KEY_QUEUE_SIZE];
+int mouse_queue_loc = 0;
+int mouse_queue_ptr = 0;
+
 unsigned char lastCmd = 0;
 short cmdRead = 1;
 
@@ -32,7 +53,6 @@ void IRIntr_Sony(void)
 	static char state = 0;
 	static char buf = 0;	
 	static char bits = 0;
-	static int porchIgnore = 0;
 	char tmrC = 0;
 
 	// Read the pin
@@ -82,8 +102,8 @@ void IRIntr_Sony(void)
 		if(bits == SONY_NUM_BITS)
 		{
 			// Done!
-			HandleIR(buf);
 			porchIgnore = 8;
+			HandleIR(buf);
 			buf = 0;
 			bits = 0;
 			state = 0;
@@ -123,7 +143,26 @@ void HandleIR(char cmd)
 			break;
 		case 0x46:          // Next - 0b00100011
 			AddToQueue(0xB5, 1);
-			break;	
+			break;
+		case 0x17:
+			AddToQueue(0x44, 0);
+			break;
+		case 0x4f:
+			AddToQueue(0x40, 3);   // Down
+			break; 
+		case 0x0f:
+			AddToQueue(0x80, 3);   // Up
+			break;
+		case 0x2f:
+			AddToQueue(0x20, 3);   // Left
+			break;
+		case 0x6f:
+			AddToQueue(0x10, 3);   // Right
+			break;
+		case 0x1f:
+			AddToQueue(0x01, 3);   // Btn 1
+			porchIgnore = 100; // Ignore some more signals to stop
+			break;            // double clicking.
 	}
 
 	lastCmd = cmd;
@@ -144,6 +183,11 @@ short IsCmd2Ready(void)
 short IsCmd3Ready(void)
 {
 	return (keyboard3_queue_loc != keyboard3_queue_ptr);
+}
+
+short IsMouseReady(void)
+{
+	return (mouse_queue_loc != mouse_queue_ptr);
 }
 
 
@@ -192,6 +236,21 @@ unsigned char NextCmd3(void)
 	return rv;
 }
 
+unsigned char NextMouse(void)
+{
+	char rv;
+
+	if(!IsMouseReady())
+		return 0;
+
+	rv = mouse_queue[mouse_queue_loc++];
+	
+	if(mouse_queue_loc >= KEY_QUEUE_SIZE)
+		mouse_queue_loc = 0;
+
+	return rv;
+}
+
 void AddToQueue(unsigned char scancode, char which)
 {
 	if(which == 0)
@@ -208,12 +267,19 @@ void AddToQueue(unsigned char scancode, char which)
 		if(keyboard2_queue_ptr >= KEY_QUEUE_SIZE)
 			keyboard2_queue_ptr = 0;
 	}
-	else
+	else if(which == 2)
 	{
 		keyboard3_queue[keyboard3_queue_ptr] = scancode;
 		keyboard3_queue_ptr++;
 		if(keyboard3_queue_ptr >= KEY_QUEUE_SIZE)
 			keyboard3_queue_ptr = 0;
+	}
+	else if(which == 3)
+	{
+		mouse_queue[mouse_queue_ptr] = scancode;
+		mouse_queue_ptr++;
+		if(mouse_queue_ptr >= KEY_QUEUE_SIZE)
+			mouse_queue_ptr = 0;
 	}
 }
 
@@ -240,3 +306,45 @@ void RB0Rising(void)
 {
 	INTCON2 |= 0b01000000;
 }
+
+/*
+void ReadEEPROMTable(void)
+{
+	// Delete the old one
+	USBTable* cur;
+	USBTable* next;
+
+	cur = table;
+	while(cur != 0)
+	{
+		next = cur->next;
+		//free(cur);
+		cur = next;
+	}
+}
+
+void WriteEEPROMTable(void)
+{
+	USBTable* tab = table;
+	UINT16 addr = 0;
+	
+	eeprom_write(addr++, num_entries);
+	
+	while(table != 0)
+	{
+		eeprom_write(addr++, tab->report);
+		eeprom_write(addr++, tab->ir_cmd);
+		eeprom_write(addr++, tab->usb_cmd);
+
+		tab = tab->next;
+	}
+}
+
+void AddTableEntry(UINT8 report, UINT8 ir_cmd, UINT8 usb_cmd)
+{
+}
+
+void RemoveTableEntry(UINT8 ir_cmd)
+{
+}
+*/

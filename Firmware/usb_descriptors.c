@@ -205,7 +205,7 @@ ROM BYTE configDescriptor1[]={
     2,                      // Number of endpoints in this intf
     HID_INTF,               // Class code
     0,     // Subclass code
-    HID_PROTOCOL_KEYBOARD,     // Protocol code
+    0,     // Protocol code
     0,                      // Interface string index
 
     /* HID Class-Specific Descriptor */
@@ -331,6 +331,34 @@ ROM struct{BYTE report[HID_RPT01_SIZE];}hid_rpt01={
 	0x91, 0x00,                    //    OUTPUT(Var, Arr, Abs)
 	0xC0,                          // END_COLLECTION          
 	
+	0x05, 0x01,                    // USAGE_PAGE(Generic Desktop)
+	0x09, 0x02,					   // USAGE(Mouse)
+	0xA1, 0x01,                    // COLLECTION(Application)
+	0x09, 0x01,                    //    USAGE(Pointer)
+    0xA1, 0x00,                    //    COLLECTION(Physical)
+	0x05, 0x09,                    //        USAGE_PAGE(Buttons)
+    0x85, 0x05,                    //        REPORT_ID(5)
+	0x15, 0x00,                    //        LOGICAL_MIN(0)
+    0x25, 0x01,                    //        LOGICAL_MAX(1)
+    0x19, 0x01,                    //        USAGE_MIN(1)
+    0x29, 0x03,                    //        USAGE_MAX(3)  // 3 buttons
+    0x95, 0x03,                    //        REPORT_COUNT(3)
+	0x75, 0x01,                    //        REPORT_SIZE(1)
+    0x81, 0x02,                    //        INPUT(Data, Variable, Absolute)
+    0x95, 0x05,                    //        REPORT_COUNT(1)
+    0x75, 0x01,                    //        REPORT_SIZE(5) // Padding
+    0x81, 0x01,                    //        INPUT(Constant)
+    0x05, 0x01,                    //        USAGE_PAGE(Generic Desktop)
+	0x15, 0x81,                    //        LOGICAL_MIN(-127)
+    0x25, 0x7F,                    //        LOGICAL_MAX(128)
+	0x75, 0x08,                    //        REPORT_SIZE(8)
+	0x95, 0x01,                    //        REPORT_COUNT(1)
+    0x09, 0x30,                    //        USAGE(X)
+	0x81, 0x06,                    //        INPUT(Data, Variable, Relative)
+	0x09, 0x31,                    //        USAGE(Y)
+	0x81, 0x06,                    //        INPUT(Data, Variable, Relative)
+    0xC0,                          //    END_COLLECTION
+	0xC0,                          // END_COLLECTION
    }
 };
 

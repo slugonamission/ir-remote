@@ -174,6 +174,7 @@ void UserInit(void);
 void YourHighPriorityISRCode();
 void YourLowPriorityISRCode();
 void Keyboard(void);
+void HandlePCCmd(void);
 
 
 
@@ -625,6 +626,25 @@ void Keyboard(void)
 
 			sentLast = 3;
 		}
+		else if(IsMouseReady())
+		{
+			char mouseChar = NextMouse();
+			
+			//Load the HID buffer
+			hid_report_in[0] = 5;
+        	hid_report_in[1] = mouseChar & 0xF; // Lower nibble has buttons
+        	hid_report_in[2] = (mouseChar & 0x10) ? 5 : (mouseChar & 0x20) ? -5 : 0;
+        	hid_report_in[3] = (mouseChar & 0x40) ? 5 : (mouseChar & 0x80) ? -5 : 0;
+        	hid_report_in[4] = 0;
+        	hid_report_in[5] = 0;
+        	hid_report_in[6] = 0;
+        	hid_report_in[7] = 0;
+        	hid_report_in[8] = 0;
+           	//Send the 8 byte packet over USB to the host.
+           	lastTransmission = HIDTxPacket(HID_EP, (BYTE*)hid_report_in, 9);
+
+			sentLast = 5;
+		}
         else
         {
 			if(sentLast)
@@ -664,6 +684,7 @@ void Keyboard(void)
 		if(hid_report_out[0] == 4) // Have we got the right report?
 		{
 			reply = 1;
+		    HandlePCCmd();
 		}
 
 		lastOutTransmission = HIDRxPacket(HID_EP, (BYTE*)&hid_report_out, 9);
@@ -671,6 +692,10 @@ void Keyboard(void)
 
     return;		
 }//end keyboard()
+
+void HandlePCCmd(void)
+{
+}
 
 
 /******************************************************************************
